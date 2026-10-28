@@ -82,6 +82,11 @@ def main():
                 "type": "unknown_role",
                 "role": device.role,
             })
+        if policy.get("require_owner") is True and not device.has_owner():
+            violations.append({
+                "device": device.device_id,
+                "type": "missing_owner",
+            })
     report = {
         "site": root.get("site"),
         "total_devices": len(devices),
