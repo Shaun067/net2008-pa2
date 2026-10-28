@@ -2,6 +2,7 @@
 import sys
 import xml.etree.ElementTree as ET
 import json
+import yaml
 
 class Device:
     """One network device from the inventory."""
@@ -18,11 +19,21 @@ class Device:
         if self.owner is None:
             return False
         return self.owner.strip() != ""
+
+def load_policy(path):
+    """Load the YAML policy file and return it as a dictionary."""
+    with open(path) as f:
+        policy = yaml.safe_load(f)
+    if policy is None:
+        policy = {}
+    return policy
         
 def main():
     
     path = sys.argv[1]
     root = ET.parse(path).getroot()
+    policy = load_policy(sys.argv[2])
+    print(policy)
 
     devices = []
     skipped = 0
