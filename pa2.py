@@ -47,9 +47,12 @@ def main():
 
         devices.append(Device(device_id, role, os_version, owner, interfaces))
 
-    for device in devices:
-        print(device.device_id, device.has_owner())
-    print("skipped:", skipped)
+    report = {
+        "site": root.get("site"),
+        "total_devices": len(devices),
+        "skipped_devices": skipped,
+    }
+    print(report)
 
 if __name__ == "__main__":
     main()
