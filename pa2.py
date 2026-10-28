@@ -33,7 +33,6 @@ def main():
     path = sys.argv[1]
     root = ET.parse(path).getroot()
     policy = load_policy(sys.argv[2])
-    print(policy)
 
     devices = []
     skipped = 0
@@ -58,9 +57,11 @@ def main():
             interfaces.append(iface.get("status"))
 
         devices.append(Device(device_id, role, os_version, owner, interfaces))
+
     roles = {}
     for device in devices:
         roles[device.role] = roles.get(device.role, 0) + 1
+
     interface_counts = {"up": 0, "down": 0, "other": 0}
     for device in devices:
         for status in device.interfaces:
@@ -71,12 +72,23 @@ def main():
             else:
                 interface_counts["other"] += 1
 
+    violations = []
+    min_os = policy.get("min_os")
+
+    for device in devices:
+        if min_os is not None and device.role not in min_os:
+            violations.append({
+                "device": device.device_id,
+                "type": "unknown_role",
+                "role": device.role,
+            })
     report = {
         "site": root.get("site"),
         "total_devices": len(devices),
         "skipped_devices": skipped,
         "roles": roles,
         "interfaces": interface_counts,
+        "violations": violations,
     }
     with open("audit.json", "w") as f:
         json.dump(report, f, indent=2)
