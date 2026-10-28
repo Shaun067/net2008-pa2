@@ -27,7 +27,24 @@ def load_policy(path):
     if policy is None:
         policy = {}
     return policy
-        
+
+def parse_version(text):
+    """Turn a version string like '15.10' into a list of ints [15, 10]."""
+    return [int(part) for part in text.split(".")]
+
+def compare_versions(a, b):
+    """Return -1 if a < b, 0 if equal, 1 if a > b"""
+    left = parse_version(a)
+    right = parse_version(b)
+    length = max(len(left), len(right))
+    left += [0] * (length - len(left))
+    right += [0] * (length - len(right))
+    if left < right:
+        return -1
+    if left > right:
+        return 1
+    return 0
+
 def main():
     
     path = sys.argv[1]
@@ -95,6 +112,15 @@ def main():
                     "device": device.device_id,
                     "type": "too_many_down",
                     "down": down,
+                })
+        if min_os is not None and device.role in min_os:
+            required = min_os[device.role]
+            if compare_versions(device.os_version, required) < 0:
+                violations.append({
+                    "device": device.device_id,
+                    "type": "os_outdated",
+                    "found": device.os_version,
+                    "required": required,
                 })
     report = {
         "site": root.get("site"),
