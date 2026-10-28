@@ -49,11 +49,22 @@ def main():
     roles = {}
     for device in devices:
         roles[device.role] = roles.get(device.role, 0) + 1
+    interface_counts = {"up": 0, "down": 0, "other": 0}
+    for device in devices:
+        for status in device.interfaces:
+            if status == "up":
+                interface_counts["up"] += 1
+            elif status == "down":
+                interface_counts["down"] += 1
+            else:
+                interface_counts["other"] += 1
+
     report = {
         "site": root.get("site"),
         "total_devices": len(devices),
         "skipped_devices": skipped,
         "roles": roles,
+        "interfaces": interface_counts,
     }
     print(report)
 
