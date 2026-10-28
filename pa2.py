@@ -46,11 +46,14 @@ def main():
             interfaces.append(iface.get("status"))
 
         devices.append(Device(device_id, role, os_version, owner, interfaces))
-
+    roles = {}
+    for device in devices:
+        roles[device.role] = roles.get(device.role, 0) + 1
     report = {
         "site": root.get("site"),
         "total_devices": len(devices),
         "skipped_devices": skipped,
+        "roles": roles,
     }
     print(report)
 
