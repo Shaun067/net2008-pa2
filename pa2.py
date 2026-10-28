@@ -2,16 +2,54 @@
 import sys
 import xml.etree.ElementTree as ET
 
+class Device:
+    """One network device from the inventory."""
 
+    def __init__(self, device_id, role, os_version, owner, interfaces):
+        self.device_id = device_id
+        self.role = role
+        self.os_version = os_version
+        self.owner = owner            
+        self.interfaces = interfaces  
+
+    def has_owner(self):
+        """Return True if the device has a non-empty owner."""
+        if self.owner is None:
+            return False
+        return self.owner.strip() != ""
+        
 def main():
-    """Print the id of every device in the inventory."""
+    
     path = sys.argv[1]
     root = ET.parse(path).getroot()
-    for device in root.findall("device"):
-        device_id = device.get("id")
-        if device_id is not None:
-            print(device_id)
 
+    devices = []
+    skipped = 0
+
+    for element in root.findall("device"):
+        device_id = element.get("id")
+        if device_id is None:
+            skipped += 1
+            continue
+
+        role = element.get("role")
+        os_version = element.get("os")
+
+        owner_element = element.find("owner")
+        if owner_element is None:
+            owner = None
+        else:
+            owner = owner_element.text 
+
+        interfaces = []
+        for iface in element.findall("interface"):
+            interfaces.append(iface.get("status"))
+
+        devices.append(Device(device_id, role, os_version, owner, interfaces))
+
+    for device in devices:
+        print(device.device_id, device.has_owner())
+    print("skipped:", skipped)
 
 if __name__ == "__main__":
     main()
