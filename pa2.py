@@ -1,6 +1,7 @@
 # Shaun Jacob, ID: 041271370
 import sys
 import xml.etree.ElementTree as ET
+import json
 
 class Device:
     """One network device from the inventory."""
@@ -66,7 +67,9 @@ def main():
         "roles": roles,
         "interfaces": interface_counts,
     }
-    print(report)
+    with open("audit.json", "w") as f:
+        json.dump(report, f, indent=2)
+    print("Wrote audit.json:", len(devices), "devices,", skipped, "skipped")
 
 if __name__ == "__main__":
     main()
