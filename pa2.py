@@ -4,6 +4,9 @@ import xml.etree.ElementTree as ET
 import json
 import yaml
 
+class InputFileError(Exception):
+    """Raised when an input file is missing, unreadable or invalid."""
+
 class Device:
     """One network device from the inventory."""
 
@@ -22,10 +25,19 @@ class Device:
 
 def load_policy(path):
     """Load the YAML policy file and return it as a dictionary."""
-    with open(path) as f:
-        policy = yaml.safe_load(f)
+    try:
+        with open(path) as f:
+            policy = yaml.safe_load(f)
+    except FileNotFoundError:
+        raise InputFileError(f"{path}: file not found")
+    except yaml.YAMLError:
+        raise InputFileError(f"{path}: not valid YAML")
+    except OSError:
+        raise InputFileError(f"{path}: cannot be read")
     if policy is None:
-        policy = {}
+        return {}
+    if not isinstance(policy, dict):
+        raise InputFileError(f"{path}: policy must be a mapping")
     return policy
 
 def parse_version(text):
@@ -45,11 +57,21 @@ def compare_versions(a, b):
         return 1
     return 0
 
-def main():
+def load_inventory(path):
+    """Parse the inventory XML file and return its root element."""
+    try:
+        return ET.parse(path).getroot()
+    except FileNotFoundError:
+        raise InputFileError(f"{path}: file not found")
+    except ET.ParseError:
+        raise InputFileError(f"{path}: not valid XML")
+    except OSError:
+        raise InputFileError(f"{path}: cannot be read")
+
+def run(inventory_path, policy_path):
     
-    path = sys.argv[1]
-    root = ET.parse(path).getroot()
-    policy = load_policy(sys.argv[2])
+    root = load_inventory(inventory_path)
+    policy = load_policy(policy_path)
 
     devices = []
     skipped = 0
@@ -139,6 +161,17 @@ def main():
     with open("audit.json", "w") as f:
         json.dump(report, f, indent=2)
     print("Wrote audit.json:", len(devices), "devices,", skipped, "skipped")
+
+def main():
+    """Check the arguments, run the audit and handle input errors."""
+    if len(sys.argv) != 3:
+        print("usage: python pa2.py DEVICES.xml POLICY.yaml")
+        sys.exit(2)
+    try:
+        run(sys.argv[1], sys.argv[2])
+    except InputFileError as err:
+        print(f"error: {err}")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
