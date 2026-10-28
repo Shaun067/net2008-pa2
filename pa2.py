@@ -113,7 +113,7 @@ def main():
                     "type": "too_many_down",
                     "down": down,
                 })
-        if min_os is not None and device.role in min_os:
+        if min_os is not None and device.role in min_os and device.os_version:
             required = min_os[device.role]
             if compare_versions(device.os_version, required) < 0:
                 violations.append({
@@ -122,6 +122,11 @@ def main():
                     "found": device.os_version,
                     "required": required,
                 })
+
+    violating_ids = {v["device"] for v in violations}
+    compliant = sorted(
+        d.device_id for d in devices if d.device_id not in violating_ids
+    )
     report = {
         "site": root.get("site"),
         "total_devices": len(devices),
@@ -129,6 +134,7 @@ def main():
         "roles": roles,
         "interfaces": interface_counts,
         "violations": violations,
+        "compliant": compliant,
     }
     with open("audit.json", "w") as f:
         json.dump(report, f, indent=2)
