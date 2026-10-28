@@ -74,6 +74,7 @@ def main():
 
     violations = []
     min_os = policy.get("min_os")
+    max_down = policy.get("max_down_interfaces")
 
     for device in devices:
         if min_os is not None and device.role not in min_os:
@@ -87,6 +88,14 @@ def main():
                 "device": device.device_id,
                 "type": "missing_owner",
             })
+        if max_down is not None:
+            down = device.interfaces.count("down")
+            if down > max_down:
+                violations.append({
+                    "device": device.device_id,
+                    "type": "too_many_down",
+                    "down": down,
+                })
     report = {
         "site": root.get("site"),
         "total_devices": len(devices),
