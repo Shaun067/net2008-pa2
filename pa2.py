@@ -11,6 +11,7 @@ class Device:
     """One network device from the inventory."""
 
     def __init__(self, device_id, role, os_version, owner, interfaces):
+        """Store the data for one device."""
         self.device_id = device_id
         self.role = role
         self.os_version = os_version
@@ -69,7 +70,7 @@ def load_inventory(path):
         raise InputFileError(f"{path}: cannot be read")
 
 def run(inventory_path, policy_path):
-    
+    """Read both files, check every device and write audit.json."""
     root = load_inventory(inventory_path)
     policy = load_policy(policy_path)
 
