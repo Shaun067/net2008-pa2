@@ -93,8 +93,8 @@ def run(inventory_path, policy_path):
             owner = owner_element.text 
 
         interfaces = []
-        for iface in element.findall("interface"):
-            interfaces.append(iface.get("status"))
+        for inter_ele in element.findall("interface"):
+            interfaces.append(inter_ele.get("status"))
 
         devices.append(Device(device_id, role, os_version, owner, interfaces))
 
